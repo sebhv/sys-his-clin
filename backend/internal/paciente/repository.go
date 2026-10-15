@@ -77,7 +77,7 @@ func (r *repository) FindAll(page, limit int) ([]domain.Paciente, int64, error) 
 	}
 
 	if err := r.db.
-		Order("fecha_registro DESC").
+		Order("created_at DESC").
 		Offset(offset).
 		Limit(limit).
 		Find(&pacientes).Error; err != nil {

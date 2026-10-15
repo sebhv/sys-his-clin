@@ -22,13 +22,25 @@ type Paciente struct {
 	TipoSangre         string `json:"tipo_sangre"         gorm:"column:tipo_sangre"`
 	Telefono           string `json:"-"                   gorm:"column:telefono"`
 	Email              string `json:"-"                   gorm:"column:email;not null"`
-	EmailHash          string `json:"-"                   gorm:"column:email_hash;uniqueIndex"`
+	EmailHash          string `json:"-"                   gorm:"column:email_hash;index:,unique,where:email_hash IS NOT NULL AND email_hash != ''"`
 	Direccion          string `json:"-"                   gorm:"column:direccion"`
 	//FotoURL            	string		`json:"foto_url"          gorm:"column:foto_url"`
 
-	CreadoEn      time.Time      `json:"-"     gorm:"column:fecha_registro;autoCreateTime"`
-	ActualizadoEn time.Time      `json:"-"     gorm:"column:fecha_actualizacion;autoUpdateTime"`
-	EliminadoEn   gorm.DeletedAt `json:"-"     gorm:"column:fecha_eliminacion;index"`
+	CreatedAt time.Time      `json:"created_at"           gorm:"column:created_at; not null"`
+	UpdatedAt time.Time      `json:"updated_at"           gorm:"column:updated_at; not null"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at"           gorm:"column:deleted_at;index"`
+}
+
+// BeforeCreate intercepta la inserción en GORM para generar un UUID v7 si el ID está vacío.
+func (p *Paciente) BeforeCreate(tx *gorm.DB) (err error) {
+	if p.ID == uuid.Nil {
+		newUUID, err := uuid.NewV7()
+		if err != nil {
+			return err
+		}
+		p.ID = newUUID
+	}
+	return nil
 }
 
 func (p *Paciente) SensitiveFields() []*string {
@@ -41,3 +53,5 @@ func (p *Paciente) SensitiveFields() []*string {
 		&p.Direccion,
 	}
 }
+
+func (p *Paciente) EntityName() string { return "paciente" }
